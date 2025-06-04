@@ -1,49 +1,27 @@
-import type { State } from "./state";
-import { PokeAPI } from "./pokeapi";
+import type { State } from "./state.js";
 
-export async function commandMap(state: State) {
-  let data;
-  try {
-    if(state.nextLocationsURL){
-         data = await state.pokeapi.fetchLocations(state.nextLocationsURL);
-    }else{
-         data = await state.pokeapi.fetchLocations();
-    }
-      
-      for (const cmd of Object.values(data.results)) {
-        console.log(`${cmd.name}`);
-      }
-      state.nextLocationsURL = data.next ?? undefined
-      state.prevLocationsURL = data.previous ?? undefined
-  } catch (error) {
-            if (error instanceof Error) {
-                console.error(error.message);
-            } else {
-                console.error(error);
-            }
+export async function commandMapForward(state: State) {
+  const locations = await state.pokeAPI.fetchLocations(state.nextLocationsURL);
+
+  state.nextLocationsURL = locations.next;
+  state.prevLocationsURL = locations.previous;
+
+  for (const loc of locations.results) {
+    console.log(loc.name);
   }
 }
 
-export async function commandMapb(state: State){
-  let data;
-  try {
-    if(state.prevLocationsURL){
-         data = await state.pokeapi.fetchLocations(state.prevLocationsURL);
-    }else{
-         console.log("you're on the first page")
-         return;
-    }
-      
-      for (const cmd of Object.values(data.results)) {
-        console.log(`${cmd.name}`);
-      }
-      state.nextLocationsURL = data.next ?? undefined
-      state.prevLocationsURL = data.previous ?? undefined
-  } catch (error) {
-            if (error instanceof Error) {
-                console.error(error.message);
-            } else {
-                console.error(error);
-            }
+export async function commandMapBack(state: State) {
+  if (!state.prevLocationsURL) {
+    throw new Error("you're on the first page");
+  }
+
+  const locations = await state.pokeAPI.fetchLocations(state.prevLocationsURL);
+
+  state.nextLocationsURL = locations.next;
+  state.prevLocationsURL = locations.previous;
+
+  for (const loc of locations.results) {
+    console.log(loc.name);
   }
 }
